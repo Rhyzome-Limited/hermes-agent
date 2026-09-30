@@ -106,6 +106,17 @@ def test_has_vertex_credentials_false_when_nothing_set(vertex_adapter):
     assert vertex_adapter.has_vertex_credentials() is False
 
 
+@pytest.mark.parametrize("region, host", [
+    ("global", "aiplatform.googleapis.com"),
+    ("eu", "aiplatform.eu.rep.googleapis.com"),
+    ("us", "aiplatform.us.rep.googleapis.com"),
+    ("europe-west1", "europe-west1-aiplatform.googleapis.com"),
+])
+def test_base_url_host_matches_region_kind(vertex_adapter, region, host):
+    """Multi-regions (eu/us) 400 on ``{region}-aiplatform``; they are served only on the REP host."""
+    assert vertex_adapter.build_vertex_base_url("p", region) == (
+        f"https://{host}/v1beta1/projects/p/locations/{region}/endpoints/openapi"
+    )
 
 
 def test_multiplex_scope_takes_precedence_over_raw_environ(vertex_adapter, monkeypatch):

@@ -64,7 +64,7 @@ model:
 
 vertex:
   project_id: my-gcp-project   # blank → use the project embedded in the credentials
-  region: global               # "global" is required for the Gemini 3.x previews
+  region: global               # Gemini 3.x: "global", or the "eu" / "us" multi-regions
 ```
 
 :::tip Environment variables win over config.yaml
@@ -79,7 +79,8 @@ vertex:
    ```text
    https://aiplatform.googleapis.com/v1beta1/projects/{project}/locations/{region}/endpoints/openapi
    ```
-   Regional locations use a `{region}-aiplatform.googleapis.com` host instead.
+   Regional locations use a `{region}-aiplatform.googleapis.com` host instead; the `eu` / `us`
+   multi-regions use `aiplatform.{region}.rep.googleapis.com`.
 4. If a session runs longer than the token lifetime and a request returns `401`, Hermes re-mints the token and retries automatically. On a long-running gateway, if ADC's refresh token has itself expired, Hermes falls back to the service-account JSON when one is configured.
 
 ## Available Models
@@ -98,8 +99,12 @@ Vertex requires the `google/` vendor prefix on model IDs. The `hermes model` pic
 | Gemini 2.5 Flash | `google/gemini-2.5-flash` |
 
 :::note `global` region for Gemini 3.x
-The Gemini 3.x preview models are served through the `global` endpoint. Regional endpoints (`us-central1`, etc.) may 404 them. Leave `region: global` unless you have a specific reason to pin a region.
+The Gemini 3.x models are served through the `global` endpoint and the `eu` / `us` multi-regions. Single regions (`us-central1`, `europe-west1`, etc.) may 404 them. Leave `region: global` unless you need data residency.
 :::
+
+### EU / US data residency
+
+`global` routes requests to any Google region and offers no data-residency guarantee. To keep processing inside the EU or the US, set `region: eu` or `region: us`; Hermes then uses the multi-region endpoint `https://aiplatform.{region}.rep.googleapis.com`, which also serves the Gemini 3.x models.
 
 ## Switching Models Mid-Session
 
@@ -134,7 +139,7 @@ Hermes lazy-installs it the first time you select the Vertex provider. If that f
 
 ### 404 on Gemini 3.x models
 
-You are probably on a regional endpoint. Set `region: global` in the `vertex:` section of `config.yaml` (or unset `VERTEX_REGION`).
+You are probably on a single-region endpoint. Set `region: global` (or `eu` / `us` for data residency) in the `vertex:` section of `config.yaml` (or unset `VERTEX_REGION`).
 
 ### 403 / permission denied
 

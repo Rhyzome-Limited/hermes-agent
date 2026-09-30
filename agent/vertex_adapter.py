@@ -182,8 +182,15 @@ def get_vertex_credentials(credentials_path: Optional[str] = None) -> Tuple[Opti
 
 
 def build_vertex_base_url(project_id: str, region: str = DEFAULT_REGION) -> str:
-    """OpenAI-compatible Vertex base URL; ``global`` uses the bare host (Gemini 3.x preview is global-only)."""
-    host = "aiplatform.googleapis.com" if region == "global" else f"{region}-aiplatform.googleapis.com"
+    """OpenAI-compatible Vertex base URL. ``global`` uses the bare host; the ``eu``/``us`` multi-regions
+    (which, like ``global``, serve Gemini 3.x) are only reachable on their ``aiplatform.{region}.rep`` host —
+    ``{region}-aiplatform`` answers them with HTTP 400."""
+    if region == "global":
+        host = "aiplatform.googleapis.com"
+    elif region in ("eu", "us"):
+        host = f"aiplatform.{region}.rep.googleapis.com"
+    else:
+        host = f"{region}-aiplatform.googleapis.com"
     return f"https://{host}/v1beta1/projects/{project_id}/locations/{region}/endpoints/openapi"
 
 
