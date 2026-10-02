@@ -19,6 +19,11 @@ class VertexProfile(ProviderProfile):
         from agent.transports.chat_completions import _build_gemini_thinking_config, _snake_case_gemini_thinking_config
 
         raw = _build_gemini_thinking_config(context.get("model") or "", context.get("reasoning_config"))
+        # TEMP (maria-demo): Vertex's OpenAI-compat stream sends Gemini thought summaries as plain
+        # delta.content (3.5 Flash always, 3.8 rarely), so they leak into the reply; Hermes never
+        # captures them on this path. Keep thinking (thinking_level) but don't ask for summaries.
+        if raw:
+            raw["includeThoughts"] = False
         thinking_config = _snake_case_gemini_thinking_config(raw) if raw else None
         return {"extra_body": {"google": {"thinking_config": thinking_config}}} if thinking_config else {}
 
